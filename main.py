@@ -32,6 +32,14 @@ if __name__ == '__main__':
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_SPACE:  # Режим редактирования карты
+                    build = not build
+                    if build:
+                        board.render(screen)
+                        pygame.display.flip()
+                    if not build:
+                        pass
 
         keys = pygame.key.get_pressed()
         if keys[pygame.K_ESCAPE]:  # Выход из игры
@@ -39,15 +47,6 @@ if __name__ == '__main__':
 
         if keys[pygame.K_LALT]:  # Сворачивание окна
             pygame.display.iconify()
-
-        if keys[pygame.K_SPACE]:  # Режим редактирования карты
-            build = not build
-            if build:
-                board.render(screen)
-                pygame.display.flip()
-            # if not build:
-            #     screen.fill((0, 0, 0))
-            #     pygame.display.flip()
 
         if keys[pygame.K_1] and build:  # Постройка зданий
             pygame.draw.rect(screen, (255, 255, 255), (20, 20, 100, 50))
