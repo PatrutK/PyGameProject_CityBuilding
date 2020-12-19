@@ -38,18 +38,45 @@ class Board:  # отрисовка поля
         if cell_coordinates:
             self.board[self.cell_y][self.cell_x] = (self.board[self.cell_y][self.cell_x] + 1)
 
+
+class ResidentialBuildings:  # здесь будут происходить основные действия, вплане геймплея - случайные события, стастика, игровые дни и т.д.
+    def __init__(self, *args, **k_args):
+        super().__init__()
+        pass
+
     def get_click(self, mouse_position):
         cell = self.get_cell(mouse_position)
         self.on_click(cell)
         pygame.draw.rect(screen, (255, 255, 255),
                          (event.pos[0], event.pos[1], self.cell_size * 4, self.cell_size * 3))
-        # get_click надо будет менять, либо удалять ИЗ ЭТОГО класса
 
 
-class Main(Board):  # здесь будут происходить основные действия, вплане геймплея - случайные события, стастика, игровые дни и т.д.
-    def __init__(self, *args, **k_args):
+class IndustrialBuildings:
+    def __init__(self, *args):
         super().__init__()
         pass
+        #  сельхоз, заводы
+
+
+class CultureBuildings(Board):
+    def __init__(self, *args):
+        super().__init__()
+        pass
+    #  кружки, театр, парки
+
+
+class EntertainmentBuildings(Board):
+    def __init__(self, *args):
+        super().__init__()
+        pass
+    #  площадки, кино
+
+
+class Road(Board):
+    def __init__(self, *args):
+        super(Road, self).__init__()
+        pass
+    #  дороги
 
 
 if __name__ == '__main__':
@@ -57,6 +84,7 @@ if __name__ == '__main__':
     size = 0, 1  # не нужная переменная, вернее нужная, но у нас же fullscreen!
     screen = pygame.display.set_mode(size, pygame.FULLSCREEN)
     board = Board(35, 63, 10, 10, 20)
+    homes = ResidentialBuildings
     pygame.display.set_caption('Панельки')  # это не нужно, ибо у нас fullscreen (название не видно)
     running = True
     main_build = True  # режим наблюдателя
@@ -89,32 +117,31 @@ if __name__ == '__main__':
             #     pygame.display.flip()
         if keys[pygame.K_1]:
             build_1 = True
-            pass
+            build_2, build_3, build_4, build_5, build_6 = False
         # ВЫБРАТЬ постройку - далее будем кликать мышкой на поле (поле, дом, завод, кино)
         if keys[pygame.K_2]:
             build_2 = True
-            pass
+            build_1, build_3, build_4, build_5, build_6 = False
 
         if keys[pygame.K_3]:
             build_3 = True
-            pass
+            build_1, build_2, build_4, build_5, build_6 = False
 
         if keys[pygame.K_4]:
             build_4 = True
-            pass
+            build_1, build_2, build_3, build_5, build_6 = False
 
         if keys[pygame.K_5]:
             build_5 = True
-            pass
+            build_1, build_2, build_3, build_4, build_6 = False
 
         if keys[pygame.K_6]:
             build_6 = True
             build_1, build_2, build_3, build_4, build_5 = False
-            pass
 
         for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONDOWN and build_1:  # Постройка зданий - завод
-                board.get_click(event.pos)
+                homes.get_click()
                 pygame.display.flip()
             elif event.type == pygame.MOUSEBUTTONDOWN and build_2:  # Постройка зданий - дом
                 board.get_click(event.pos)
