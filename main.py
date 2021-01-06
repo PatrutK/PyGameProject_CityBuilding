@@ -2,9 +2,6 @@ import pygame
 import os
 import sys
 
-all_sprites = pygame.sprite.Group()
-kursor_group = pygame.sprite.Group()
-
 
 def load_image(name, color_key=None):  # нужна для подгрузки картинки в игру
     fullname = os.path.join('data', name)
@@ -20,57 +17,86 @@ def load_image(name, color_key=None):  # нужна для подгрузки к
     return image
 
 
-class Board:  # отрисовка поля
-    def __init__(self, screen):  # так удобнее
-        self.width = 50
-        self.height = 100
-        self.board = [[0] * self.width for _ in range(self.height)]
-        self.left = 10
-        self.top = 10
-        self.cell_size = 20
-        self.screen = screen
+def terminate():
+    pygame.quit()
+    sys.exit()
 
-    def render(self):
-        color = pygame.Color(80, 80, 80)
-        for y in range(self.height):
-            for x in range(self.width):
-                pygame.draw.rect(self.screen, color, (
-                    self.left + y * self.cell_size, self.top + x * self.cell_size, self.cell_size,
-                    self.cell_size), 1)
 
-    def get_cell(self, mouse_position):
-        self.cell_x = (mouse_position[0] - self.left) // self.cell_size
-        self.cell_y = (mouse_position[1] - self.top) // self.cell_size
-        if (0 <= self.cell_x < self.width) and (0 <= self.cell_y < self.height):
-            print(self.cell_x, self.cell_y)
-            return self.cell_x, self.cell_y
+def load_level(name):
+    fullname = "data/" + name
+    with open(fullname, 'r') as map_file:
+        level_map = []
+        for line in map_file:
+            line = line.strip()
+            level_map.append(line)
+    return level_map
 
-    def on_click(self, cell_coordinates):
-        if cell_coordinates:
-            self.board[self.cell_y][self.cell_x] = (self.board[self.cell_y][self.cell_x] + 1)
+
+def draw_level(level_map):
+    new_player, x, y = None, None, None
+    for y in range(len(level_map)):
+        for x in range(len(level_map[y])):
+            if level_map[y][x] == '.':
+                Tile('grass.png', x, y)  # Спрайт травы
+            elif level_map[y][x] == '#':
+                Tile('water.png', x, y)  # Спрайт воды
+            elif level_map[y][x] == '@':  # Спрайт персонажа + под него спрайт травы
+                Tile('grass.png', x, y)
+                new_player = Kursor(x, y)
+            elif level_map[y][x] == '>':  # Спрайт песка (вода справа)
+                Tile('sand1.png', x, y)
+            elif level_map[y][x] == '<':  # Спрайт песка (вода слева)
+                Tile('sand2.png', x, y)
+            elif level_map[y][x] == '&':  # Спрайт леса (ограничитель карты)
+                Tile('Forest.png', x, y)
+            elif level_map[y][x] == '!':  # Спрайт песка (вода снизу)
+                Tile('sand.png', x, y)
+            elif level_map[y][x] == '^':  # Спрайт песка (вода сверху)
+                Tile('sand3.png', x, y)
+            elif level_map[y][x] == '1':  # Спрайт песка (угловой, вода справа-снизу)
+                Tile('sand4.png', x, y)
+            elif level_map[y][x] == '2':  # Спрайт песка (угловой, вода слева-снизу)
+                Tile('sand7.png', x, y)
+            elif level_map[y][x] == '3':  # Спрайт песка (угловой, вода справа-сверху)
+                Tile('sand5.png', x, y)
+            elif level_map[y][x] == '4':  # Спрайт песка (угловой, вода слева-снизу)
+                Tile('sand6.png', x, y)
+    return new_player, x, y
+
+
+class Tile(pygame.sprite.Sprite):
+    def __init__(self, tile_type, pos_x, pos_y):
+        super().__init__(tiles_group, all_sprites)
+        self.image = load_image(tile_type)
+        self.rect = self.image.get_rect().move(25 * pos_x, 25 * pos_y)
+
+        if tile_type == 'water.png' or tile_type == 'forest.png':
+            self.add(box_group, tiles_group, all_sprites)
+        else:
+            self.add(tiles_group, all_sprites)
 
 
 class Kursor(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, pos_x, pos_y):
         super().__init__()
         self.image = load_image('kursor.png', -1)
-        self.rect = self.image.get_rect()  # Получаем размеры "Прямоугольника" спрайта
-        self.rect = self.rect.move(200, 200)
+        self.rect = self.image.get_rect()
+        self.rect = self.rect.move(50 * pos_x, 50 * pos_y)
 
-        self.add(kursor_group, all_sprites)
+        self.add(player_group, all_sprites)
 
     def move_up(self):
-        self.rect = self.rect.move(0, -20)
+        self.rect = self.rect.move(0, -50)
         print(self.rect.x, self.rect.y)
 
     def move_down(self):
-        self.rect = self.rect.move(0, +20)
+        self.rect = self.rect.move(0, +50)
 
     def move_left(self):
-        self.rect = self.rect.move(-20, 0)
+        self.rect = self.rect.move(-50, 0)
 
     def move_right(self):
-        self.rect = self.rect.move(+20, 0)
+        self.rect = self.rect.move(+50, 0)
 
 
 class Camera:
@@ -126,19 +152,13 @@ class Road():
     #  дороги
 
 
-def load_image(name, color_key=None):  # нужна для подгрузки картинки в игру
-    fullname = os.path.join('data', name)
-    try:  # Выявляем ошибку
-        image = pygame.image.load(fullname)
-    except pygame.error as message:
-        print('Картинку не удаётся загрузить', fullname)
-        raise SystemExit(message)
-    if color_key is not None:  # Прозрачность картинки, если Нан, то она уже прозрачна
-        if color_key == -1:  # Если передано -1, то по верхнему левому углу удаляем фон
-            color_key = image.get_at((0, 0))
-        image.set_colorkey(color_key)  # Ставим фоном передаваемое значение
-    return image
+all_sprites = pygame.sprite.Group()
+player_group = pygame.sprite.Group()
+tiles_group = pygame.sprite.Group()
+kursor_group = pygame.sprite.Group()
+box_group = pygame.sprite.Group()
 
+kursor, level_x, level_y = draw_level(load_level("map.txt"))
 
 if __name__ == '__main__':
     pygame.init()
@@ -151,8 +171,6 @@ if __name__ == '__main__':
     fon_image = load_image('map.png')
     fonWidth, fonHeight = fon_image.get_rect().size
 
-    main = Board(screen)
-    kursor = Kursor()
     camera = Camera()
     clock = pygame.time.Clock()
 
@@ -166,7 +184,6 @@ if __name__ == '__main__':
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
                     kursor.move_up()
-                    # print(kursor.rect.x, kursor.rect.y, kursor.rect.w, kursor.rect.h)
                 elif event.key == pygame.K_DOWN:
                     kursor.move_down()
                 elif event.key == pygame.K_RIGHT:
@@ -184,11 +201,13 @@ if __name__ == '__main__':
                 pass
 
         screen.blit(fon_image, (0, 0))
-        main.render()
         all_sprites.draw(screen)
+        tiles_group.draw(screen)
+        player_group.draw(screen)
+
         camera.update(kursor)
         for sprite in all_sprites:
             camera.apply(sprite)
         pygame.display.flip()
 
-    pygame.quit()
+    terminate()
