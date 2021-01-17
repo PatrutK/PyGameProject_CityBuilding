@@ -1,6 +1,7 @@
 import pygame
 import sys
 import os
+import pygame_gui
 
 
 def load_image(name, color_key=None):  # нужна для подгрузки картинки в игру
@@ -169,10 +170,18 @@ if __name__ == '__main__':
 
     camera = Camera()
 
+    manager = pygame_gui.UIManager((WIDTH_SIZE, HEIGHT_SIZE))
+    button = pygame_gui.elements.UIButton(
+        relative_rect=pygame.Rect((200, 150), (10, 10)),  # Размеры и расположение кнопки
+        text='hello world',  # Текст на кнопке
+        manager=manager  # Менеджер кнопки
+    )
+
     running = True
     main_build = True
 
     while running:
+        time_delta = clock.tick(fps) / 1000.0  # некоторые элементы ПИ имеют таймер, поэтому нужна эта переменная
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
                 kursor.move_up()
@@ -190,9 +199,18 @@ if __name__ == '__main__':
                 kursor.move_right()
                 # if pygame.sprite.spritecollideany(player, box_group):
                 #     player.move_left()
-
             if event.type == pygame.QUIT:
                 terminate()
+            if event.type == pygame.USEREVENT:  #
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:  #
+                    if event.ui_element == button:
+                        print('d')
+
+            manager.process_events(event)
+
+        manager.update(time_delta)
+        manager.draw_ui(screen)
+        pygame.display.update()
 
         keys = pygame.key.get_pressed()
         if keys[pygame.K_ESCAPE]:  # Выход из игры
@@ -213,7 +231,7 @@ if __name__ == '__main__':
         tiles_group.draw(screen)
         player_group.draw(screen)
 
-        pygame.display.flip()
+        pygame.display.update()
         clock.tick(fps)
 
     terminate()
