@@ -64,6 +64,12 @@ def draw_level(level_map):
     return new_player, x, y
 
 
+def print_text(message, x, y, font_color=(255, 0, 0), font_type='shrift.ttf', font_size=30):  # вывод текста на экран
+    font_type1 = pygame.font.Font(font_type, font_size)
+    text = font_type1.render(message, True, font_color)
+    screen.blit(text, (x, y))
+
+
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
         super().__init__(tiles_group, all_sprites)
@@ -81,7 +87,7 @@ class Kursor(pygame.sprite.Sprite):
         super().__init__()
         self.image = load_image('kursor.png', -1)
         self.rect = self.image.get_rect()
-        self.rect = self.rect.move(50 * pos_x, 50 * pos_y)
+        self.rect = self.rect.move(1 * pos_x, 1 * pos_y)
 
         self.add(player_group, all_sprites)
 
@@ -154,7 +160,8 @@ box_group = pygame.sprite.Group()
 kursor, level_x, level_y = draw_level(load_level("map.txt"))
 
 if __name__ == '__main__':
-    WIDTH_SIZE, HEIGHT_SIZE = 800, 800
+    pygame.init()
+    WIDTH_SIZE, HEIGHT_SIZE = 1000, 900
     screen = pygame.display.set_mode((WIDTH_SIZE, HEIGHT_SIZE))
 
     clock = pygame.time.Clock()
@@ -195,13 +202,14 @@ if __name__ == '__main__':
             main_build = not main_build
             if main_build:
                 pass
+                # print_text('Режим строительства', 10, 10)
 
         camera.update(kursor)
         for sprite in all_sprites:
             camera.apply(sprite)
 
-        fon_image = load_image('map1.png')
-        screen.blit(fon_image, (0, 0))
+        # fon_image = load_image('map1.png')
+        # screen.blit(fon_image, (0, 0))
         tiles_group.draw(screen)
         player_group.draw(screen)
 
