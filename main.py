@@ -95,27 +95,53 @@ if __name__ == '__main__':
     running = True
     main_build = True
 
+    money_count = 0
+    humans_count = 0
+    happines_count = 0
+
     manager = pygame_gui.UIManager(
         (WIDTH_SIZE, HEIGHT_SIZE))  # Обрабатывает функции обновления ПИ, которые мы создаём и передаем ему
 
     switch = pygame_gui.elements.UIButton(
-        relative_rect=pygame.Rect((10, 10), (100, 40)),  # размеры и положение
-        text='Тест',  # текст
+        relative_rect=pygame.Rect((10, 10), (120, 40)),  # размеры и положение
+        text='Режим стройки',  # текст
         manager=manager  # указываем на наш менеджер
     )
+
+    buildungs_drop_menu = pygame_gui.elements.ui_drop_down_menu.UIDropDownMenu(
+        options_list=['Easy', 'Medium', 'Hard'],
+        starting_option='Easy',
+        relative_rect=pygame.Rect((140, 10), (100, 40)),  # размеры и положение
+        manager=manager
+    )
+
+    buildungs_drop_menu.hide()
 
     while running:
         time_delta = clock.tick(FPS) / 1000.0  # некоторые события ПИ используют таймеры
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
+                confirmation_dialog = pygame_gui.windows.UIConfirmationDialog(
+                    rect=pygame.Rect((200, 200), (300, 200)),
+                    manager=manager,
+                    window_title='Подтверждение',  # название окна
+                    action_long_desc='Вы уверены, что хотите выйти?',  # содержимое окошка
+                    action_short_name='OK',  # Название кнопки подтверждения
+                    blocking=True  # Игнорирует любое нажатие, пока мы не нажмем на кнопку
+                )
             if event.type == pygame.USEREVENT:  # указываем на пользоваетльское событие
+                if event.user_type == pygame_gui.UI_CONFIRMATION_DIALOG_CONFIRMED:
+                    running = False
+                if event.user_type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED:
+                    print('работает', event.text)
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:  # указываем на событие нажатие кнопки
                     if event.ui_element == switch:
                         if color == 'black':
                             color = 'gray'
+                            buildungs_drop_menu.show()
                         else:
                             color = 'black'
+                            buildungs_drop_menu.hide()
                         screen.fill(pygame.Color(color))
 
             manager.process_events(event)
@@ -130,11 +156,34 @@ if __name__ == '__main__':
             if main_build:
                 pass
 
+        money_label = pygame_gui.elements.ui_label.UILabel(
+            text=f'Бюджет: {money_count}',
+            relative_rect=pygame.Rect((540, 10), (100, 40)),
+            manager=manager
+        )
+
+        humans_label = pygame_gui.elements.ui_label.UILabel(
+            text=f'Население: {humans_count}',
+            relative_rect=pygame.Rect((650, 10), (120, 40)),
+            manager=manager
+        )
+
+        happines_label = pygame_gui.elements.ui_label.UILabel(
+            text=f'Уровень счастья: {happines_count}',
+            relative_rect=pygame.Rect((780, 10), (160, 40)),
+            manager=manager
+        )
+
+        if keys[pygame.K_1]:
+            money_count += 3
+            humans_count += 5
+            happines_count += 1
+
         screen.fill(pygame.Color(color))
-        manager.draw_ui(screen)
         all_sprites.draw(screen)
 
         board.render()
+        manager.draw_ui(screen)
 
         pygame.display.flip()
 
