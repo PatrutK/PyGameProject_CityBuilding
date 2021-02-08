@@ -98,6 +98,11 @@ if __name__ == '__main__':
     money_count = 0
     humans_count = 0
     happines_count = 0
+    days_count = 1
+    month_numb = 12
+
+    month = {1: 'Январь', 2: 'Февраль', 3: 'Март', 4: 'Апрель', 5: 'Ма1', 6: 'Июнь', 7: 'Июль', 8: 'Август',
+             9: 'Сентябрь', 10: 'Октябрь', 11: 'Ноябрь', 12: 'Декабрь'}
 
     manager = pygame_gui.UIManager(
         (WIDTH_SIZE, HEIGHT_SIZE))  # Обрабатывает функции обновления ПИ, которые мы создаём и передаем ему
@@ -109,10 +114,16 @@ if __name__ == '__main__':
     )
 
     buildungs_drop_menu = pygame_gui.elements.ui_drop_down_menu.UIDropDownMenu(
-        options_list=['Easy', 'Medium', 'Hard'],
+        options_list=['Жилое здание', 'Производство', 'Здание культуры', 'Развлечение'],
         starting_option='Easy',
-        relative_rect=pygame.Rect((140, 10), (100, 40)),  # размеры и положение
+        relative_rect=pygame.Rect((140, 10), (160, 40)),  # размеры и положение
         manager=manager
+    )
+
+    next_day_bttn = pygame_gui.elements.UIButton(
+        relative_rect=pygame.Rect((1282, 10), (130, 42)),  # размеры и положение
+        text='Слудующий день',  # текст
+        manager=manager  # указываем на наш менеджер
     )
 
     buildungs_drop_menu.hide()
@@ -129,11 +140,14 @@ if __name__ == '__main__':
                     action_short_name='OK',  # Название кнопки подтверждения
                     blocking=True  # Игнорирует любое нажатие, пока мы не нажмем на кнопку
                 )
+
             if event.type == pygame.USEREVENT:  # указываем на пользоваетльское событие
                 if event.user_type == pygame_gui.UI_CONFIRMATION_DIALOG_CONFIRMED:
                     running = False
+
                 if event.user_type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED:
                     print('работает', event.text)
+
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:  # указываем на событие нажатие кнопки
                     if event.ui_element == switch:
                         if color == 'black':
@@ -143,6 +157,21 @@ if __name__ == '__main__':
                             color = 'black'
                             buildungs_drop_menu.hide()
                         screen.fill(pygame.Color(color))
+
+                    if event.ui_element == next_day_bttn:
+                        days_count += 1
+                        if month_numb == 12 and days_count == 32:
+                            month_numb = 1
+                            days_count = 1
+                        elif month_numb % 2 != 0 and days_count == 32:
+                            month_numb += 1
+                            days_count = 1
+                        elif month_numb == 2 and days_count == 29:
+                            month_numb += 1
+                            days_count = 1
+                        elif month_numb % 2 == 0 and days_count == 31 and month[month_numb] != 'Декабрь':
+                            month_numb += 1
+                            days_count = 1
 
             manager.process_events(event)
         manager.update(time_delta)
@@ -158,19 +187,25 @@ if __name__ == '__main__':
 
         money_label = pygame_gui.elements.ui_label.UILabel(
             text=f'Бюджет: {money_count}',
-            relative_rect=pygame.Rect((540, 10), (100, 40)),
+            relative_rect=pygame.Rect((520, 10), (100, 40)),
             manager=manager
         )
 
         humans_label = pygame_gui.elements.ui_label.UILabel(
             text=f'Население: {humans_count}',
-            relative_rect=pygame.Rect((650, 10), (120, 40)),
+            relative_rect=pygame.Rect((630, 10), (130, 40)),
             manager=manager
         )
 
         happines_label = pygame_gui.elements.ui_label.UILabel(
             text=f'Уровень счастья: {happines_count}',
-            relative_rect=pygame.Rect((780, 10), (160, 40)),
+            relative_rect=pygame.Rect((770, 10), (170, 40)),
+            manager=manager
+        )
+
+        days_label = pygame_gui.elements.ui_label.UILabel(
+            text=f'День: {days_count} Месяц: {month[month_numb]}',
+            relative_rect=pygame.Rect((1075, 10), (195, 40)),
             manager=manager
         )
 
