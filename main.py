@@ -4,7 +4,6 @@ import pygame_gui
 import sys
 
 all_sprites = pygame.sprite.Group()
-kursor_group = pygame.sprite.Group()
 
 
 def load_image(name, color_key=None):  # нужна для подгрузки картинки в игру
@@ -49,13 +48,22 @@ class Board:  # отрисовка поля
     def on_click(self, cell_coordinates):
         if cell_coordinates:
             self.board[self.cell_y][self.cell_x] = (self.board[self.cell_y][self.cell_x] + 1)
+            print(cell_coordinates)
+
+    def get_click(self, mouse_pos):
+        cell = self.get_cell(mouse_pos)
+        self.on_click(cell)
 
 
-# class ResidentialBuildings():
-#     def __init__(self, *args):
-#         pass
-#
-#
+class ResidentialBuildings(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(all_sprites)
+        self.x = board.cell_x
+        self.y = board.cell_y
+        self.image = load_image("build1.png")
+        self.rect = self.image.get_rect()
+
+
 # class IndustrialBuildings():
 #     def __init__(self, *args):
 #         pass
@@ -141,6 +149,9 @@ if __name__ == '__main__':
                     blocking=True  # Игнорирует любое нажатие, пока мы не нажмем на кнопку
                 )
 
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                board.get_click(event.pos)
+
             if event.type == pygame.USEREVENT:  # указываем на пользоваетльское событие
                 if event.user_type == pygame_gui.UI_CONFIRMATION_DIALOG_CONFIRMED:
                     running = False
@@ -210,9 +221,7 @@ if __name__ == '__main__':
         )
 
         if keys[pygame.K_1]:
-            money_count += 3
-            humans_count += 5
-            happines_count += 1
+            pass
 
         screen.fill(pygame.Color(color))
         all_sprites.draw(screen)
