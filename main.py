@@ -1,8 +1,8 @@
 import pygame
 import os
 import pygame_gui
-import sys
 from random import *
+import sqlite3
 
 all_sprites = pygame.sprite.Group()
 
@@ -65,6 +65,22 @@ def show_menu():
         pygame.display.update()
 
 
+def update_all_stats():
+    global workplace, happines_count, humans_count, soiling
+
+    if humans_count > workplace or soiling > 60:
+        if happines_count > 0:
+            happines_count -= 15
+        return happines_count
+
+
+def end_game():
+    global happines_count, soiling, end_game_flag
+    if humans_count <= 0 or soiling >= 100:
+        end_game_flag = True
+    return end_game_flag
+
+
 class Board:  # отрисовка поля
     def __init__(self, screen):
         self.height = 70
@@ -76,7 +92,8 @@ class Board:  # отрисовка поля
         self.screen = screen
 
         start_int = IndustrialBuildings(190, 160)
-        start_res = ResidentialBuildings (210, 240)
+        start_res = ResidentialBuildings(210, 240)
+        start_res = ResidentialBuildings(210, 240)
 
     def render(self):
         color = pygame.Color(80, 80, 80)
@@ -102,9 +119,6 @@ class Board:  # отрисовка поля
             return self.cell_x, self.cell_y
         else:
             return None
-
-    # def on_click(self):
-    #     print(self.board[self.cell_y][self.cell_x])
 
     def build(self, mouse_pos):
         global ind_count
@@ -209,17 +223,8 @@ class Board:  # отрисовка поля
                     self.board[self.cell_y][self.cell_x + 2], \
                     self.board[self.cell_y][self.cell_x + 3] = -1, -1, -1, -1, -1, -1, -1, -1
 
-def update_all_stats():
-    global workplace, happines_count, humans_count, soiling
-
-    if humans_count > workplace or soiling > 60:
-        if happines_count > 0:
-            happines_count -= 15
-        return happines_count
-
 
 class ResidentialBuildings(pygame.sprite.Sprite):
-
     def __init__(self, x, y):
         super().__init__(all_sprites)
         self.x = x
@@ -309,6 +314,7 @@ if __name__ == '__main__':
     running = True
     main_build = False
     current_build = None
+    end_game_flag = False
 
     money_count = 300
     humans_count = 50
@@ -318,6 +324,14 @@ if __name__ == '__main__':
     soiling = 20
     workplace = 75
     ind_count = 1
+
+    game_over = pygame.sprite.Sprite()
+    game_over.image = load_image("game_over.png")
+    all_sprites.add(game_over)
+
+    game_over.rect = game_over.image.get_rect()
+    game_over.rect.x = -1420
+    game_over.rect.y = 0
 
     month = {1: 'Январь', 2: 'Февраль', 3: 'Март', 4: 'Апрель', 5: 'Май', 6: 'Июнь', 7: 'Июль', 8: 'Август',
              9: 'Сентябрь', 10: 'Октябрь', 11: 'Ноябрь', 12: 'Декабрь'}
@@ -390,6 +404,7 @@ if __name__ == '__main__':
                         days_count += 1
                         soiling += 5 * ind_count
                         update_all_stats()
+                        end_game()
                         if month_numb == 12 and days_count == 32:
                             month_numb = 1
                             days_count = 1
@@ -415,6 +430,11 @@ if __name__ == '__main__':
         keys = pygame.key.get_pressed()
         if keys[pygame.K_ESCAPE]:  # Выход из игры
             running = False
+
+        if end_game_flag:
+            game_over.rect.x += 10
+            if game_over.rect.width + game_over.rect.x == WIDTH_SIZE:
+                end_game_flag = False
 
         work_place_label = pygame_gui.elements.ui_label.UILabel(
             text=f'Раб.места: {workplace}',
@@ -452,13 +472,11 @@ if __name__ == '__main__':
             manager=manager
         )
 
-        if keys[pygame.K_1]:
-            pass
         screen.fill(pygame.Color(color))
 
         board.render()
-        all_sprites.draw(screen)
         manager.draw_ui(screen)
+        all_sprites.draw(screen)
 
         pygame.display.flip()
 
