@@ -2,6 +2,7 @@ import pygame
 import os
 import pygame_gui
 import sys
+from random import *
 
 all_sprites = pygame.sprite.Group()
 
@@ -48,6 +49,7 @@ def show_menu():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 menu_run = False
+                running = False
             if event.type == pygame.USEREVENT:
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:  # указываем на событие нажатие кнопки
                     if event.ui_element == start_btn:
@@ -64,7 +66,7 @@ def show_menu():
 
 
 class Board:  # отрисовка поля
-    def __init__(self, screen):  # так удобнее
+    def __init__(self, screen):
         self.height = 70
         self.width = 70
         self.board = [[0] * self.width for _ in range(self.height)]
@@ -73,6 +75,9 @@ class Board:  # отрисовка поля
         self.cell_size = 20
         self.screen = screen
 
+        start_int = IndustrialBuildings(190, 160)
+        start_res = ResidentialBuildings (210, 240)
+
     def render(self):
         color = pygame.Color(80, 80, 80)
         for y in range(self.width):
@@ -80,6 +85,14 @@ class Board:  # отрисовка поля
                 pygame.draw.rect(self.screen, color, (
                     self.left + y * self.cell_size, self.top + x * self.cell_size, self.cell_size,
                     self.cell_size), 1)
+        self.board[1][8] = -1
+        self.board[1][9] = -1
+        self.board[1][10] = -1
+        self.board[3][8] = -1
+        self.board[3][9] = -1
+        self.board[3][10] = -1
+        self.board[0][9] = -1
+        self.board[0][10] = -1
 
     def get_cell(self, mouse_position):
         self.cell_x = (mouse_position[0] - self.left) // self.cell_size
@@ -94,6 +107,7 @@ class Board:  # отрисовка поля
     #     print(self.board[self.cell_y][self.cell_x])
 
     def build(self, mouse_pos):
+        global ind_count
         cell = self.get_cell(mouse_pos)
         if self.board[self.cell_y][self.cell_x] == -1 or cell is None:
             pass
@@ -112,6 +126,7 @@ class Board:  # отрисовка поля
                     res_build = ResidentialBuildings(mouse_pos[0] // 20 * self.cell_size + self.left,
                                                      mouse_pos[1] // 20 * self.cell_size)
                     res_build.new_stat()
+                    update_all_stats()
                     self.board[self.cell_y + 1][self.cell_x], \
                     self.board[self.cell_y + 1][self.cell_x + 1], \
                     self.board[self.cell_y + 1][self.cell_x + 2], \
@@ -132,6 +147,8 @@ class Board:  # отрисовка поля
                     ind_build = IndustrialBuildings(mouse_pos[0] // 20 * self.cell_size + self.left,
                                                     mouse_pos[1] // 20 * self.cell_size)
                     ind_build.new_stat()
+                    update_all_stats()
+                    ind_count += 1
                     self.board[self.cell_y + 1][self.cell_x], \
                     self.board[self.cell_y + 1][self.cell_x + 1], \
                     self.board[self.cell_y + 1][self.cell_x + 2], \
@@ -157,6 +174,8 @@ class Board:  # отрисовка поля
                 else:
                     cult_build = CultureBuildings(mouse_pos[0] // 20 * self.cell_size + self.left,
                                                   mouse_pos[1] // 20 * self.cell_size)
+                    cult_build.new_stat()
+                    update_all_stats()
                     self.board[self.cell_y + 1][self.cell_x], \
                     self.board[self.cell_y + 1][self.cell_x + 1], \
                     self.board[self.cell_y + 1][self.cell_x + 2], \
@@ -179,6 +198,8 @@ class Board:  # отрисовка поля
                 else:
                     ent_build = EntertainmentBuildings(mouse_pos[0] // 20 * self.cell_size + self.left,
                                                        mouse_pos[1] // 20 * self.cell_size)
+                    ent_build.new_stat()
+                    update_all_stats()
                     self.board[self.cell_y + 1][self.cell_x], \
                     self.board[self.cell_y + 1][self.cell_x + 1], \
                     self.board[self.cell_y + 1][self.cell_x + 2], \
@@ -187,6 +208,14 @@ class Board:  # отрисовка поля
                     self.board[self.cell_y][self.cell_x + 1], \
                     self.board[self.cell_y][self.cell_x + 2], \
                     self.board[self.cell_y][self.cell_x + 3] = -1, -1, -1, -1, -1, -1, -1, -1
+
+def update_all_stats():
+    global workplace, happines_count, humans_count, soiling
+
+    if humans_count > workplace or soiling > 60:
+        if happines_count > 0:
+            happines_count -= 15
+        return happines_count
 
 
 class ResidentialBuildings(pygame.sprite.Sprite):
@@ -214,10 +243,15 @@ class IndustrialBuildings(pygame.sprite.Sprite):
         self.rect = self.image.get_rect().move(x, y)
 
     def new_stat(self):
-        global money_count, workplace
+        global money_count, workplace, happines_count, soiling
         money_count -= 75
-        workplace += 50
-        return money_count, workplace
+        workplace += 75
+        happines_count -= 10
+        if happines_count > 0 and happines_count < 100:
+            happines_count -= 5
+        elif soiling > 0 and soiling < 100:
+            soiling += 20
+        return money_count, workplace, happines_count, soiling
 
 
 class CultureBuildings(pygame.sprite.Sprite):
@@ -228,6 +262,15 @@ class CultureBuildings(pygame.sprite.Sprite):
         self.image = load_image("dk_build.png")
         self.rect = self.image.get_rect().move(x, y)
 
+    def new_stat(self):
+        global money_count, happines_count, soiling
+        money_count -= 35
+        if happines_count > 0 and happines_count < 100:
+            happines_count += 10
+        elif soiling < 100 and soiling > 0:
+            soiling -= 10
+        return money_count, happines_count, soiling
+
 
 class EntertainmentBuildings(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -236,6 +279,13 @@ class EntertainmentBuildings(pygame.sprite.Sprite):
         self.y = y
         self.image = load_image("kino_build.png")
         self.rect = self.image.get_rect().move(x, y)
+
+    def new_stat(self):
+        global money_count, happines_count
+        money_count -= 75
+        if happines_count > 0 and happines_count < 100:
+            happines_count += 15
+        return money_count, happines_count
 
 
 # class Road():
@@ -260,13 +310,14 @@ if __name__ == '__main__':
     main_build = False
     current_build = None
 
-    money_count = 200
+    money_count = 300
     humans_count = 50
     happines_count = 50
     days_count = 1
     month_numb = 6
-    soiling = 0
-    workplace = 0
+    soiling = 20
+    workplace = 75
+    ind_count = 1
 
     month = {1: 'Январь', 2: 'Февраль', 3: 'Март', 4: 'Апрель', 5: 'Май', 6: 'Июнь', 7: 'Июль', 8: 'Август',
              9: 'Сентябрь', 10: 'Октябрь', 11: 'Ноябрь', 12: 'Декабрь'}
@@ -331,7 +382,14 @@ if __name__ == '__main__':
                         screen.fill(pygame.Color(color))
 
                     if event.ui_element == next_day_bttn:
+                        humans_count += randint(5, 20)
+                        if workplace < humans_count:
+                            money_count += 10 * ind_count
+                        else:
+                            money_count += 30 * ind_count
                         days_count += 1
+                        soiling += 5 * ind_count
+                        update_all_stats()
                         if month_numb == 12 and days_count == 32:
                             month_numb = 1
                             days_count = 1
@@ -357,6 +415,12 @@ if __name__ == '__main__':
         keys = pygame.key.get_pressed()
         if keys[pygame.K_ESCAPE]:  # Выход из игры
             running = False
+
+        work_place_label = pygame_gui.elements.ui_label.UILabel(
+            text=f'Раб.места: {workplace}',
+            relative_rect=pygame.Rect((325, 10), (115, 40)),
+            manager=manager
+        )
 
         money_label = pygame_gui.elements.ui_label.UILabel(
             text=f'Бюджет: {money_count}',
